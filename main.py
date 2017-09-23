@@ -6,7 +6,7 @@ def dfs(graph, current_x, current_y, visited):
     visited.append([current_x, current_y])
     if graph[current_x][current_y] == '.':
         return True
-    graph[current_x][current_y] = '~'
+    graph[current_x][current_y] = '.'
     children = utils.get_children(graph, current_x, current_y)
     for child in children:
         if child not in visited:
@@ -23,7 +23,7 @@ def bfs(graph, start_x, start_y):
         [current_x, current_y] = q.get()
         if graph[current_x][current_y] == '.':
             return True
-        graph[current_x][current_y] = '~'
+        graph[current_x][current_y] = '.'
         children = utils.get_children(graph, current_x, current_y)
         for child in children:
             if child not in visited:
@@ -32,50 +32,48 @@ def bfs(graph, start_x, start_y):
 
 
 def greedy_bfs(graph, start_x, start_y, end_x, end_y):
-    current_x, current_y = start_x, start_y
-    children = utils.get_children(graph, current_x, current_y)
     visited = []
-    count = 0
-    while children:
-        count += 1
+    frontier = [[start_x, start_y]]
+    while frontier:
+        [current_x, current_y] = utils.get_best_score_greedy(frontier, end_x, end_y)
         if graph[current_x][current_y] == '.':
             return True
-        graph[current_x][current_y] = '~'
-        min_distance = 2147483647
-        for child in children:
-            if child not in visited:
-                visited.append(child)
-                distance_to_end = utils.get_distance(child[0], child[1], end_x, end_y)
-                if distance_to_end < min_distance:
-                    min_distance = distance_to_end
-                    [current_x, current_y] = child
-        children = utils.get_children(graph, current_x, current_y)
-        if count > 100000:
-            return False
+        frontier.remove([current_x, current_y])
+        visited.append([current_x, current_y])
+        graph[current_x][current_y] = '.'
+        for child in utils.get_children(graph, current_x, current_y):
+            if (child not in visited) and (child not in frontier):
+                frontier.append(child)
     return False
 
 
 def a_star(graph, start_x, start_y, end_x, end_y):
-    current_x, current_y = start_x, start_y
-    children = utils.get_children(graph, current_x, current_y)
     visited = []
-    count = 0
-    while children:
-        count += 1
+    frontier = [[start_x, start_y]]
+    g = utils.get_g(graph, start_x, start_y)
+    h = f = [[0 for i in range(len(graph[0]))] for j in range(len(graph))]
+    f[start_x][start_y] = h[start_x][start_y] = utils.get_distance(start_x, start_y, end_x, end_y)
+    while frontier:
+        [current_x, current_y] = utils.get_best_score_a_star(frontier, start_x, start_y, end_x, end_y)
         if graph[current_x][current_y] == '.':
             return True
-        graph[current_x][current_y] = '~'
-        min_distance = 2147483647
-        for child in children:
-            if child not in visited:
-                visited.append(child)
-                f_n = utils.get_distance(child[0], child[1], end_x, end_y) + utils.get_distance(child[0], child[1], start_x, start_y)
-                if f_n < min_distance:
-                    min_distance = f_n
-                    [current_x, current_y] = child
-        children = utils.get_children(graph, current_x, current_y)
-        if count > 100000:
-            return False
+        frontier.remove([current_x, current_y])
+        visited.append([current_x, current_y])
+        graph[current_x][current_y] = '.'
+        for child in utils.get_children(graph, current_x, current_y):
+            child_current_cost = g[current_x][current_y] + 1
+            if child in frontier:
+                if g[child[0]][child[1]] <= child_current_cost:
+                    continue
+            elif child in visited:
+                if g[child[0]][child[1]] <= child_current_cost:
+                    continue
+                visited.remove(child)
+                frontier.append(child)
+            else:
+                frontier.append(child)
+                h[child[0]][child[1]] = utils.get_distance(child[0], child[1], end_x, end_y)
+            g[child[0]][child[1]] = child_current_cost
     return False
 
 
