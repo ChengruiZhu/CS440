@@ -50,13 +50,13 @@ def get_children(graph, x, y):
     return children
 
 
-def get_best_score_a_star(nodes, start_x, start_y, end_x, end_y):
+def get_best_score_a_star(nodes, g, h):
+    res_x = res_y = 0
     min_distance = 2147483647
+
     for node in nodes:
-        f_n = (get_distance(node[0], node[1], start_x, start_y) +
-               get_distance(node[0], node[1], end_x, end_y))
-        if f_n < min_distance:
-            min_distance = f_n
+        if (g[node[0]][node[1]] + h[node[0]][node[1]]) < min_distance:
+            min_distance = g[node[0]][node[1]] + h[node[0]][node[1]]
             res_x, res_y = node
     return [res_x, res_y]
 

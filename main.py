@@ -51,10 +51,10 @@ def a_star(graph, start_x, start_y, end_x, end_y):
     visited = []
     frontier = [[start_x, start_y]]
     g = utils.get_g(graph, start_x, start_y)
-    h = f = [[0 for i in range(len(graph[0]))] for j in range(len(graph))]
-    f[start_x][start_y] = h[start_x][start_y] = utils.get_distance(start_x, start_y, end_x, end_y)
+    h = [[0 for i in range(len(graph[0]))] for j in range(len(graph))]
+    h[start_x][start_y] = utils.get_distance(start_x, start_y, end_x, end_y)
     while frontier:
-        [current_x, current_y] = utils.get_best_score_a_star(frontier, start_x, start_y, end_x, end_y)
+        [current_x, current_y] = utils.get_best_score_a_star(frontier, g, h)
         if graph[current_x][current_y] == '.':
             return True
         frontier.remove([current_x, current_y])
@@ -74,6 +74,7 @@ def a_star(graph, start_x, start_y, end_x, end_y):
                 frontier.append(child)
                 h[child[0]][child[1]] = utils.get_distance(child[0], child[1], end_x, end_y)
             g[child[0]][child[1]] = child_current_cost
+        visited.append([current_x, current_y])
     return False
 
 
