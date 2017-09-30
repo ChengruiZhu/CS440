@@ -1,80 +1,110 @@
 import queue
 import utils
+import sys
 
 
-def dfs(graph, current_x, current_y, visited):
-    visited.append([current_x, current_y])
-    if graph[current_x][current_y] == '.':
+def dfs(maze, current, visited):
+    global step_dfs, expanded_node_dfs
+    visited.append(current)
+    if current.value == '.':
         return True
-    graph[current_x][current_y] = '.'
-    children = utils.get_children(graph, current_x, current_y)
+    children = utils.get_children(maze, current)
     for child in children:
         if child not in visited:
-            if dfs(graph, child[0], child[1], visited):
+            expanded_node_dfs += 1
+            if dfs(maze, child, visited):
+                child.mark('.')
+                step_dfs += 1
                 return True
     return False
 
 
-def bfs(graph, start_x, start_y):
+def bfs(maze, start):
+    global step_bfs, expanded_node_bfs
     q = queue.Queue()
-    visited = [[start_x, start_y]]
-    q.put([start_x, start_y])
+    visited = [start]
+    parent = {}
+    q.put(start)
     while q.qsize() > 0:
-        [current_x, current_y] = q.get()
-        if graph[current_x][current_y] == '.':
+        current = q.get()
+        if current.value == '.':
+            step_bfs = trace(maze, parent, current)
             return True
-        graph[current_x][current_y] = '.'
-        children = utils.get_children(graph, current_x, current_y)
+        children = utils.get_children(maze, current)
         for child in children:
             if child not in visited:
                 visited.append(child)
+                expanded_node_bfs += 1
                 q.put(child)
+                parent[child] = current
 
 
-def greedy_bfs(graph, start_x, start_y, end_x, end_y):
+def trace(maze, parent, current):
+    global step
+    curr_parent = parent[current]
+    if curr_parent:
+        if parent[current].value != 'P':
+            parent[current].mark('.')
+            step += 1
+            trace(maze, parent, parent[current])
+    return step
+
+
+def greedy_bfs(maze, start, end):
+    global step_greedy, expanded_node_greedy
     visited = []
-    frontier = [[start_x, start_y]]
+    frontier = [start]
+    parent = {}
     while frontier:
-        [current_x, current_y] = utils.get_best_score_greedy(frontier, end_x, end_y)
-        if graph[current_x][current_y] == '.':
+        current = utils.get_best_score_greedy(frontier, end)
+        if current.value == '.':
+            step_greedy = trace(maze, parent, current)
             return True
-        frontier.remove([current_x, current_y])
-        visited.append([current_x, current_y])
-        graph[current_x][current_y] = '.'
-        for child in utils.get_children(graph, current_x, current_y):
+        frontier.remove(current)
+        visited.append(current)
+        expanded_node_greedy += 1
+        for child in utils.get_children(maze, current):
             if (child not in visited) and (child not in frontier):
                 frontier.append(child)
+                parent[child] = current
     return False
 
 
-def a_star(graph, start_x, start_y, end_x, end_y):
+def a_star(maze, start, end):
+    global expanded_node_a, step_a
     visited = []
-    frontier = [[start_x, start_y]]
-    g = utils.get_g(graph, start_x, start_y)
-    h = [[0 for i in range(len(graph[0]))] for j in range(len(graph))]
-    h[start_x][start_y] = utils.get_distance(start_x, start_y, end_x, end_y)
+    frontier = [start]
+    parent = {}
+    g = utils.get_g(maze, start)
+    h = {}
+    h[start] = utils.get_distance(start, end)
+    current_cost_lower = False
+
     while frontier:
-        [current_x, current_y] = utils.get_best_score_a_star(frontier, g, h)
-        if graph[current_x][current_y] == '.':
+        # find next step where f = (g + h) is the lowest
+        current = utils.get_best_score_a_star(frontier, g, h)
+        if current.value == '.':
+            step_a = trace(maze, parent, current)
             return True
-        frontier.remove([current_x, current_y])
-        visited.append([current_x, current_y])
-        graph[current_x][current_y] = '.'
-        for child in utils.get_children(graph, current_x, current_y):
-            child_current_cost = g[current_x][current_y] + 1
-            if child in frontier:
-                if g[child[0]][child[1]] <= child_current_cost:
-                    continue
-            elif child in visited:
-                if g[child[0]][child[1]] <= child_current_cost:
-                    continue
-                visited.remove(child)
+        frontier.remove(current)
+        visited.append(current)
+        expanded_node_a += 1
+
+        for child in utils.get_children(maze, current):
+            if child in visited:
+                continue
+            child_current_g = g[current] + 1
+
+            if child not in frontier:
                 frontier.append(child)
-            else:
-                frontier.append(child)
-                h[child[0]][child[1]] = utils.get_distance(child[0], child[1], end_x, end_y)
-            g[child[0]][child[1]] = child_current_cost
-        visited.append([current_x, current_y])
+                current_cost_lower = True
+            elif child_current_g < g[child]:
+                current_cost_lower = True
+
+            if current_cost_lower:
+                parent[child] = current
+                g[child] = child_current_g
+                h[child] = utils.get_distance(child, end)
     return False
 
 
@@ -91,14 +121,16 @@ def choose_maze():
         maze = utils.setup_maze('openMaze.txt')
     else:
         print('Input illegal')
-        maze = utils.setup_maze('smallMaze.txt')
+        sys.exit()
     return maze
 
 
 maze = choose_maze()
-[start_x, start_y] = utils.find_start(maze)
-[end_x, end_y] = utils.find_end(maze)
+start = utils.find_start(maze)
+end = utils.find_end(maze)
 visited = []
+step = step_dfs = step_bfs = step_greedy = step_a = 0
+expanded_node_dfs = expanded_node_bfs = expanded_node_greedy = expanded_node_a = 0
 
 search_type = input('Please choose a search method:\n'
                     '1. DFS\n'
@@ -106,18 +138,22 @@ search_type = input('Please choose a search method:\n'
                     '3. Greedy BFS\n'
                     '4. A*\n')
 if search_type == '1':
-    print(dfs(maze, start_x, start_y, visited))
+    print(dfs(maze, start, visited))
+    print('Path cost: ', step_dfs + 1)
+    print('Expanded node: ', expanded_node_dfs)
 elif search_type == '2':
-    print(bfs(maze, start_x, start_y))
+    print(bfs(maze, start))
+    print('Path cost: ', step_bfs + 1)
+    print('Expanded node: ', expanded_node_bfs)
 elif search_type == '3':
-    print(greedy_bfs(maze, start_x, start_y, end_x, end_y))
+    print(greedy_bfs(maze, start, end))
+    print('Path cost: ', step_greedy + 1)
+    print('Expanded node: ', expanded_node_greedy)
 elif search_type == '4':
-    print(a_star(maze, start_x, start_y, end_x, end_y))
+    print(a_star(maze, start, end))
+    print('Path cost: ', step_a + 1)
+    print('Expanded node: ', expanded_node_a)
 else:
     print('Input illegal')
 
-maze[start_x][start_y] = 'P'
-maze[end_x][end_y] = '.'
-for line in maze:
-    line = ''.join(line)
-    print(line)
+utils.print_maze(maze)
