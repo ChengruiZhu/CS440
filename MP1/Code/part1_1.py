@@ -1,6 +1,7 @@
 import queue
-import utils
 import sys
+
+from MP1.Code import utils
 
 
 def dfs(maze, current, visited):
@@ -115,11 +116,11 @@ def choose_maze():
                         '2. Big Maze\n'
                         '3. Open Maze\n')
     if maze_type == '1':
-        maze = utils.setup_maze('mediumMaze.txt')
+        maze = utils.setup_maze('MP1/Input/mediumMaze.txt')
     elif maze_type == '2':
-        maze = utils.setup_maze('bigMaze.txt')
+        maze = utils.setup_maze('MP1/Input/bigMaze.txt')
     elif maze_type == '3':
-        maze = utils.setup_maze('openMaze.txt')
+        maze = utils.setup_maze('MP1/Input/openMaze.txt')
     else:
         print('Input illegal')
         sys.exit()
