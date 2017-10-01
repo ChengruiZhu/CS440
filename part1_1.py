@@ -37,6 +37,7 @@ def bfs(maze, start):
                 expanded_node_bfs += 1
                 q.put(child)
                 parent[child] = current
+    return False
 
 
 def trace(maze, parent, current):
