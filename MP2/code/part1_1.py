@@ -20,7 +20,7 @@ def dumb(graph, sources):
                     result = dumb(graph, sources)
                     if result:
                         return result
-                    node.value = '_'
+                    node.mark('_')
     return False
 
 
@@ -32,10 +32,10 @@ def smart(graph, sources):
         return True
     node = utils.select_node(graph)
     for color in colors:
-        node.value = color
+        node.mark(color)
         if utils.current_assignment_valid(graph, sources, node):
             smart(graph, sources)
-        node.value = '_'
+        node.mark('_')
     return False
 
 

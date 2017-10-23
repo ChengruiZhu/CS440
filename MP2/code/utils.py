@@ -17,13 +17,6 @@ def setup_graph(input_name):
     f = open(input_name, 'r')
     f = f.readlines()
     graph = []
-    # colors = []
-    # for line in f:
-    #     line = line.rstrip('\n')
-    #     for char in line:
-    #         if char != '_':
-    #             colors.append(char)
-    # colors = list(set(colors))
     x = 0
     for line in f:
         line = line.rstrip('\n')
@@ -157,14 +150,15 @@ def current_assignment_valid(graph, sources, current_node):
             for neighbor in a_neighbors:
                 if neighbor.value == node.value:
                     count += 1
-            if count > 1 or (count != 1 and num_of_unassigned_neighbors == 0):
+            if count > 1 or (count == 0 and num_of_unassigned_neighbors == 0):
                 return False
         else:
             count = 0
             for neighbor in a_neighbors:
                 if neighbor.value == node.value:
                     count += 1
-            if count > 2 or (count != 2 and num_of_unassigned_neighbors < 2):
+            if count > 2 or (count == 0 and num_of_unassigned_neighbors < 2) or \
+                    (count == 1 and num_of_unassigned_neighbors == 0):
                 return False
     return True
 
