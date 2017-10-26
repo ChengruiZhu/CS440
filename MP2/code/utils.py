@@ -86,60 +86,41 @@ def assignment_complete(graph, sources):
 
 
 # select the most constrained variable
-# def select_node(graph):
-#     result = None
-#     maxnum_of_neighbors = 0
-#     for line in graph:
-#         for node in line:
-#             if node.value == '_':
-#                 num_of_neighbors = len(get_assigned_neighbors(graph, node))
-#                 if num_of_neighbors >= maxnum_of_neighbors:
-#                     maxnum_of_neighbors = num_of_neighbors
-#                     result = node
-#     return result
-
-
 def select_node(graph):
+    result = None
+    num = 100
     for line in graph:
         for node in line:
             if node.value == '_':
-                return node
+                num_of_u_neighbors = len(get_unassigned_neighbors(graph, node))
+                if num_of_u_neighbors < num:
+                    num = num_of_u_neighbors
+                    result = node
+    return result
 
 
 # select the least constraining value
-# def select_color(graph, node):
-#     colors = node.colors
-#     assigned_neighbors = get_assigned_neighbors(graph, node)
-#     num_neighbors = len(assigned_neighbors)
-#     for neighbor in assigned_neighbors:
-
-
-# def current_assignment_valid(graph, sources):
-#     for line in graph:
-#         for node in line:
-#             if node.value != '_':
-#                 a_neighbors = get_assigned_neighbors(graph, node)
-#                 num_of_unassigned_neighbors = len(get_unassigned_neighbors(graph, node))
-#                 if node_is_source(node, sources):
-#                     count = 0
-#                     for neighbor in a_neighbors:
-#                         if neighbor.value == node.value:
-#                             count += 1
-#                     if count > 1 or (count != 1 and num_of_unassigned_neighbors == 0):
-#                         return False
-#                 else:
-#                     count = 0
-#                     for neighbor in a_neighbors:
-#                         if neighbor.value == node.value:
-#                             count += 1
-#                     if count > 2 or (count != 2 and num_of_unassigned_neighbors < 2):
-#                         return False
-#     return True
+def select_color(graph, colors, node):
+    res = []
+    assigned_neighbors = get_assigned_neighbors(graph, node)
+    num_neighbors = len(assigned_neighbors)
+    if assigned_neighbors:
+        res.append(assigned_neighbors[0].value)
+    if num_neighbors > 1 and assigned_neighbors[1].value not in res:
+        res.append(assigned_neighbors[1].value)
+    if num_neighbors > 2 and assigned_neighbors[2].value not in res:
+        res.append(assigned_neighbors[2].value)
+    for color in colors:
+        if color not in res:
+            res.append(color)
+    return res
 
 
 def current_assignment_valid(graph, sources, current_node):
     nodes = [current_node]
     neighbors = get_assigned_neighbors(graph, current_node)
+    u_neighbors = get_unassigned_neighbors(graph, current_node)
+
     for neighbor in neighbors:
         nodes.append(neighbor)
     for node in nodes:
@@ -160,6 +141,28 @@ def current_assignment_valid(graph, sources, current_node):
             if count > 2 or (count == 0 and num_of_unassigned_neighbors < 2) or \
                     (count == 1 and num_of_unassigned_neighbors == 0):
                 return False
+    if u_neighbors:
+        for u_neighbor in u_neighbors:
+            # assigned neighbors of the unassigned neighbor
+            au_neighbors = get_assigned_neighbors(graph, u_neighbor)
+            # unassigned neighbors of the unassigned neighbor
+            uu_neighbors = get_unassigned_neighbors(graph, u_neighbor)
+            a_num = len(au_neighbors)
+            u_num = len(uu_neighbors)
+            a_value = []
+            if au_neighbors:
+                for neighbor in au_neighbors:
+                    a_value.append(neighbor.value)
+                a_value = list(set(a_value))
+
+                if a_num == 4 and len(a_value) != 3:
+                    return False
+                if a_num == 3 and len(a_value) == 1:
+                    return False
+                if a_num == 3 and u_num == 0 and len(a_value) == 3:
+                    return False
+                if a_num == 2 and u_num == 0 and len(a_value) == 2:
+                    return False
     return True
 
 
@@ -209,8 +212,3 @@ def get_unassigned_neighbors(graph, node):
         if graph[node.x][node.y - 1].value == '_':
             children.append(graph[node.x][node.y - 1])
     return children
-
-
-graph = setup_graph('../../MP2/inputs/input77.txt')
-sources = find_sources(graph)
-print(current_assignment_valid(graph, sources, graph[0][0]))
