@@ -71,14 +71,14 @@ if __name__ == "__main__":
 
     # test
     result = []
-    for img_num in range(1000):
+    for img_idx in range(1000):
         max_p = -sys.maxsize - 1
         max_p_label = -1
         for label in range(10):
             cal_p = 0
             for i in range(28):
                 for j in range(28):
-                    if test_matrix[img_num][i][j] == 1:
+                    if test_matrix[img_idx][i][j] == 1:
                         cal_p += log(pij1[label][i][j])
                     else:
                         cal_p += log(pij0[label][i][j])
@@ -98,7 +98,96 @@ if __name__ == "__main__":
     for i in range(10):
         for j in range(10):
             matrix[i][j] /= num_test[i]
-        print(matrix[i])
+    print('confusion matrix: ')
+    for line in matrix:
+        print(line)
+
+    # find highest and lowest posterior probabilities
+    max_p_for_each_digit = [(-sys.maxsize - 1) for i in range(10)]
+    max_p_idx = [-1 for i in range(10)]
+    min_p_for_each_digit = [sys.maxsize for i in range(10)]
+    min_p_idx = [-1 for i in range(10)]
+    for img_idx in range(1000):
+        label = test_labels[img_idx]
+        cal_p = 0
+        for i in range(28):
+            for j in range(28):
+                if test_matrix[img_idx][i][j] == 1:
+                    cal_p += log(pij1[label][i][j])
+                else:
+                    cal_p += log(pij0[label][i][j])
+        cal_p += log(p_class[label])
+        if cal_p > max_p_for_each_digit[label]:
+            max_p_for_each_digit[label] = cal_p
+            max_p_idx[label] = img_idx
+        if cal_p < min_p_for_each_digit[label]:
+            min_p_for_each_digit[label] = cal_p
+            min_p_idx[label] = img_idx
+    print('highest posterior probabilities and index: \n',
+          max_p_for_each_digit, '\n',
+          max_p_idx, '\n',
+          'lowest posterior probabilities and index: \n',
+          min_p_for_each_digit, '\n',
+          min_p_idx)
+
+    # likelihoods and odd ratios
+    likelihood = open('likelihood.txt', 'w')
+    for label in range(3, 10):
+        # likelihood = open('likelihood.txt', 'a')
+        for i in range(28):
+            for j in range(28):
+                if pij1[label][i][j] > 0.5:
+                    likelihood.write('+')
+                elif pij1[label][i][j] < 0.3:
+                    likelihood.write('-')
+                else:
+                    likelihood.write(' ')
+            likelihood.write('\n')
+        likelihood.write('\n')
+
+    odd_ratio53 = open('oddRatio53.txt', 'w')
+    for i in range(28):
+        for j in range(28):
+            if log(pij1[5][i][j] / pij1[3][i][j]) > 0.2:
+                odd_ratio53.write('+')
+            elif log(pij1[5][i][j] / pij1[3][i][j]) < -0.2:
+                odd_ratio53.write('-')
+            else:
+                odd_ratio53.write(' ')
+        odd_ratio53.write('\n')
+
+    odd_ratio49 = open('oddRatio49.txt', 'w')
+    for i in range(28):
+        for j in range(28):
+            if log(pij1[4][i][j] / pij1[9][i][j]) > 0.2:
+                odd_ratio49.write('+')
+            elif log(pij1[4][i][j] / pij1[9][i][j]) < -0.2:
+                odd_ratio49.write('-')
+            else:
+                odd_ratio49.write(' ')
+        odd_ratio49.write('\n')
+
+    odd_ratio79 = open('oddRatio79.txt', 'w')
+    for i in range(28):
+        for j in range(28):
+            if log(pij1[7][i][j] / pij1[9][i][j]) > 0.2:
+                odd_ratio79.write('+')
+            elif log(pij1[7][i][j] / pij1[9][i][j]) < -0.2:
+                odd_ratio79.write('-')
+            else:
+                odd_ratio79.write(' ')
+        odd_ratio79.write('\n')
+
+    odd_ratio89 = open('oddRatio89.txt', 'w')
+    for i in range(28):
+        for j in range(28):
+            if log(pij1[8][i][j] / pij1[9][i][j]) > 0.2:
+                odd_ratio89.write('+')
+            elif log(pij1[8][i][j] / pij1[9][i][j]) < -0.2:
+                odd_ratio89.write('-')
+            else:
+                odd_ratio89.write(' ')
+        odd_ratio89.write('\n')
 
 
 
